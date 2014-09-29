@@ -9,7 +9,8 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 with open('README.rst') as fp:
     description = fp.read()
-req = []
+req = ['pyinotify',
+       'rpaths']
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='gitify',

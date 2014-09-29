@@ -12,7 +12,8 @@ import locale
 import logging
 import sys
 
-from . import __version__ as gitify_version
+from gitify import __version__ as gitify_version
+from gitify.sync import synchronize
 
 
 def setup_logging(verbosity):
@@ -58,11 +59,17 @@ def main():
                         "branch out of changes happening in DropBox or "
                         "similar \"dump\" collaboration software",
             parents=[options])
+    parser.add_argument('folder',
+                        help="Folder to watch for changes")
+    parser.add_argument('repository',
+                        help="Git repository to synchronize")
+    parser.add_argument('-b', '--branch', action='store', default='master',
+                        help="Git branch to synchronize (default: master)")
 
     args = parser.parse_args()
     setup_logging(args.verbosity)
 
-    # TODO : do stuff
+    synchronize(args.folder, args.repository, args.branch)
 
     sys.exit(0)
 
