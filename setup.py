@@ -32,5 +32,16 @@ setup(name='gitobox',
       keywords=['git', 'dropbox', 'drive', 'gdrive', 'cloud', 'dumb', 'sync',
                 'synchronization', 'collaboration'],
       classifiers=[
-          'Development Status :: 3 - Alpha',
-          'License :: OSI Approved :: BSD License'])
+          'Development Status :: 2 - Pre-Alpha',
+          'Environment :: Console',
+          'Environment :: No Input/Output (Daemon)',
+          'Intended Audience :: Developers',
+          'Intended Audience :: Information Technology',
+          'Intended Audience :: System Administrators',
+          'License :: OSI Approved :: BSD License',
+          'Operating System :: POSIX :: Linux',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 3',
+          'Topic :: Communications :: File Sharing',
+          'Topic :: Internet',
+          'Topic :: Software Development :: Version Control'])
