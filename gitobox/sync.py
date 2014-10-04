@@ -20,10 +20,10 @@ class Synchronizer(pyinotify.ProcessEvent):
                 self.__dirs[path] = manager.add_watch(str(path), mask)
 
     def __add(self, path, moved):
-        logging.info("%s %s: %s" % (
+        logging.info("%s %s: %s",
                      "Directory" if path.is_dir() else "File",
                      "moved in" if moved else "created",
-                     path))
+                     path)
         if path.is_dir():
             res = manager.add_watch(str(path), mask)
             assert len(res) == 1
@@ -31,10 +31,10 @@ class Synchronizer(pyinotify.ProcessEvent):
             self.__dirs[path] = wd
 
     def __remove(self, path, moved):
-        logging.info("%s %s: %s" % (
+        logging.info("%s %s: %s",
                      "Directory" if path.is_dir() else "File",
                      "moved out" if moved else "removed",
-                     path))
+                     path)
         if moved and path in self.__dirs:
             wd = self.__dirs.pop(path)
             manager.rm_watch(wd)
