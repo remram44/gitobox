@@ -1,6 +1,6 @@
-"""Entry point for the gitify utility.
+"""Entry point for the gitobox utility.
 
-This contains :func:`~gitify.main.main`, which is the entry point declared to
+This contains :func:`~gitobox.main.main`, which is the entry point declared to
 setuptools. It is also callable directly.
 """
 
@@ -12,8 +12,8 @@ import locale
 import logging
 import sys
 
-from gitify import __version__ as gitify_version
-from gitify.sync import synchronize
+from gitobox import __version__ as gitobox_version
+from gitobox.sync import synchronize
 
 
 def setup_logging(verbosity):
@@ -48,13 +48,13 @@ def main():
     # General options
     options = argparse.ArgumentParser(add_help=False)
     options.add_argument('--version', action='version',
-                         version="gitify version %s" % gitify_version)
+                         version="gitobox version %s" % gitobox_version)
     options.add_argument('-v', '--verbose', action='count', default=1,
                          dest='verbosity',
                          help="augments verbosity level")
 
     parser = argparse.ArgumentParser(
-            description="gitify synchronizes a directory with a Git "
+            description="gitobox synchronizes a directory with a Git "
                         "repository; it is particularly useful to make a Git "
                         "branch out of changes happening in DropBox or "
                         "similar \"dump\" collaboration software",

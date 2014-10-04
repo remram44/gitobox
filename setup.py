@@ -13,11 +13,11 @@ req = ['pyinotify',
        'rpaths']
 if sys.version_info < (2, 7):
     req.append('argparse')
-setup(name='gitify',
+setup(name='gitobox',
       version='0.1',
-      packages=['gitify'],
+      packages=['gitobox'],
       entry_points={'console_scripts': [
-          'gitify = gitify.main:main']},
+          'gitobox = gitobox.main:main']},
       install_requires=req,
       description=
           "Synchronizes a directory with a Git repository; particularly "
@@ -26,7 +26,7 @@ setup(name='gitify',
       author_email='remirampin@gmail.com',
       maintainer="Remi Rampin",
       maintainer_email='remirampin@gmail.com',
-      url='https://github.com/remram44/gitify',
+      url='https://github.com/remram44/gitobox',
       long_description=description,
       license='BSD',
       keywords=['git', 'dropbox', 'drive', 'gdrive', 'cloud', 'dumb', 'sync',
