@@ -10,6 +10,7 @@ import argparse
 import codecs
 import locale
 import logging
+from rpaths import Path
 import sys
 
 from gitobox import __version__ as gitobox_version
@@ -72,7 +73,7 @@ def main():
     args = parser.parse_args()
     setup_logging(args.verbosity)
 
-    synchronize(args.folder, args.repository, args.branch)
+    synchronize(Path(args.folder), Path(args.repository), args.branch, 5)
 
     sys.exit(0)
 
