@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import logging
-from threading import RLock, Thread
+from threading import Semaphore, Thread
 
 from gitobox.server import Server
 from gitobox.utils import unicode_
@@ -12,11 +12,12 @@ class Synchronizer(object):
     """Main application logic: synchronizes folder with Git repo.
     """
     def __init__(self, folder, repository, branchname, timeout):
+        self._lock = Semaphore(1)
         self._watcher = DirectoryWatcher(folder,
                                          self._directory_changed,
+                                         self._lock,
                                          timeout)
         self._hook_server = Server(5055, self._hook_triggered)
-        self._lock = RLock()
         #self._repository = GitRepository(repository, branchname)
 
     def run(self):
@@ -29,13 +30,10 @@ class Synchronizer(object):
         self._hook_server.run()
 
     def _directory_changed(self, paths):
-        if self._lock.acquire(blocking=False):
-            try:
-                logging.warning("Paths changed: %s",
-                                " ".join(unicode_(p) for p in paths))
-                # TODO : Create Git commit changing these files
-            finally:
-                self._lock.release()
+        # We got called back though the ResettableTimer, so the lock is held
+        logging.warning("Paths changed: %s",
+                        " ".join(unicode_(p) for p in paths))
+        # TODO : Create Git commit changing these files
 
     def _hook_triggered(self, data, conn, addr):
         if data != b"notsosecret":

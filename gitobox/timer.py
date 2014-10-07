@@ -7,10 +7,14 @@ from gitobox.utils import irange
 
 class ResettableTimer(object):
     """Calls a function a specified number of seconds after the last start().
+
+    If a lock is passed to the constructor, it will be acquired when calling
+    start(), returning False immediately if that's impossible. It will be
+    released when the timer triggers of is canceled.
     """
     IDLE, RESET, PRIMED = irange(3)
 
-    def __init__(self, timeout, function, args=[], kwargs={}):
+    def __init__(self, timeout, function, args=[], kwargs={}, lock=None):
         self.thread = Thread(target=self._run)
         self.thread.setDaemon(True)
         self.timeout = timeout
@@ -18,6 +22,7 @@ class ResettableTimer(object):
         self.function = function
         self.args = args
         self.kwargs = kwargs
+        self.lock = lock
 
         # Only start the thread on the first start()
         self.started = False
@@ -25,11 +30,19 @@ class ResettableTimer(object):
         # This protects self.status and is used to wake up self._run()
         self.cond = Condition()
         self.status = ResettableTimer.IDLE
+        # The lock is held if and only if status != IDLE
 
     def start(self):
         """Starts or restarts the countdown.
+
+        If the Timer has an associated lock, this method returns False if it
+        can't be acquired.
         """
         with self.cond:
+            if (self.status == ResettableTimer.IDLE and
+                    self.lock is not None
+                    and not self.lock.acquire(blocking=False)):
+                return False
             if self.started:
                 self.status = ResettableTimer.RESET
                 self.cond.notifyAll()
@@ -38,6 +51,7 @@ class ResettableTimer(object):
                 self.status = ResettableTimer.PRIMED
                 self.started = True
                 self.thread.start()
+            return True
 
     def cancel(self):
         """Cancels the countdown without calling back.
@@ -46,6 +60,8 @@ class ResettableTimer(object):
             if self.status != ResettableTimer.IDLE:
                 self.status = ResettableTimer.IDLE
                 self.cond.notifyAll()
+                if self.lock is not None:
+                    self.lock.release()
 
     def _run(self):
         with self.cond:
@@ -62,3 +78,5 @@ class ResettableTimer(object):
                 elif self.status == ResettableTimer.PRIMED:
                     self.function(*self.args, **self.kwargs)
                     self.status = ResettableTimer.IDLE
+                    if self.lock is not None:
+                        self.lock.release()

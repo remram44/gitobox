@@ -14,7 +14,7 @@ manager = pyinotify.WatchManager()
 
 
 class DirectoryWatcher(pyinotify.ProcessEvent):
-    def __init__(self, folder, callback, timeout):
+    def __init__(self, folder, callback, lock, timeout):
         self.__callback = callback
 
         self.notifier = pyinotify.Notifier(manager, self)
@@ -27,7 +27,8 @@ class DirectoryWatcher(pyinotify.ProcessEvent):
                 self.__dirs[path] = manager.add_watch(str(path), mask)
         self.__changes = set()
 
-        self.__timer = ResettableTimer(timeout, self._timer_expired)
+        self.__timer = ResettableTimer(timeout, self._timer_expired,
+                                       lock=lock)
 
     def run(self):
         self.notifier.loop()
