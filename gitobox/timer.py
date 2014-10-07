@@ -10,7 +10,7 @@ class ResettableTimer(object):
 
     If a lock is passed to the constructor, it will be acquired when calling
     start(), returning False immediately if that's impossible. It will be
-    released when the timer triggers of is canceled.
+    released when the timer triggers or is canceled.
     """
     IDLE, RESET, PRIMED = irange(3)
 
