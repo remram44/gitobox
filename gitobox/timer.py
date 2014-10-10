@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from threading import Condition, Thread
+import traceback
 
 from gitobox.utils import irange
 
@@ -76,7 +77,10 @@ class ResettableTimer(object):
                     self.status = ResettableTimer.PRIMED
                 # Still PRIMED: we timed out without interruption, call back
                 elif self.status == ResettableTimer.PRIMED:
-                    self.function(*self.args, **self.kwargs)
+                    try:
+                        self.function(*self.args, **self.kwargs)
+                    except Exception:
+                        traceback.print_exc()
                     self.status = ResettableTimer.IDLE
                     if self.lock is not None:
                         self.lock.release()
