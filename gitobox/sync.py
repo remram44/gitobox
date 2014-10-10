@@ -16,23 +16,25 @@ class Synchronizer(object):
         self._watcher = DirectoryWatcher(folder,
                                          self._directory_changed,
                                          self._lock,
-                                         timeout)
+                                         timeout,
+                                         assume_changed=True)
         self._hook_server = Server(5055, 2, self._hook_triggered)
         #self._repository = GitRepository(repository, branchname)
 
     def run(self):
-        # TODO : Check that current Git tree matches directory contents
-
         watcher_thread = Thread(target=self._watcher.run)
         watcher_thread.setDaemon(True)
         watcher_thread.start()
 
         self._hook_server.run()
 
-    def _directory_changed(self, paths):
+    def _directory_changed(self, paths=None):
         # We got called back though the ResettableTimer, so the lock is held
-        logging.warning("Paths changed: %s",
-                        " ".join(unicode_(p) for p in paths))
+        if paths is None:
+            logging.warning("Assuming all paths changed")
+        else:
+            logging.warning("Paths changed: %s",
+                            " ".join(unicode_(p) for p in paths))
         # TODO : Create Git commit changing these files
 
     def _hook_triggered(self, data, conn, addr):
