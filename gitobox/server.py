@@ -20,8 +20,10 @@ class Server(object):
         clients = {}
 
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind(('127.0.0.1', self._port))
+        address = ('127.0.0.1', self._port)
+        server.bind(address)
         server.listen(5)
+        logging.debug("Server created on %s:%d", *address)
 
         next_timeout = None
         now = time.time()
@@ -31,7 +33,6 @@ class Server(object):
             sockets.extend(clients)
             timeout = (None if next_timeout is None
                        else next_timeout - now + 0.2)
-            print("Timeout: %r" % timeout)
             rlist, _, _ = select.select(sockets, [], [],
                                         timeout)
             now = time.time()
@@ -84,8 +85,5 @@ class Server(object):
                 if clients:
                     next_timeout = min(t
                                        for _, t, _ in itervalues(clients))
-                    print("min(%r) = %r" % (
-                          [t for _, t, _ in itervalues(clients)],
-                          next_timeout))
                 else:
                     next_timeout = None
