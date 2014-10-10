@@ -12,8 +12,9 @@ class Server(object):
     TIMEOUT = 5.0
     LENGTH = 1024
 
-    def __init__(self, port, callback):
+    def __init__(self, port, client_lines, callback):
         self._callback = callback
+        self._client_lines = client_lines
         self._port = port
 
     def run(self):
@@ -52,7 +53,7 @@ class Server(object):
                     conn, addr = server.accept()
                     logging.debug("Connection from %s", addr)
                     timeout = now + self.TIMEOUT
-                    clients[conn] = b'', timeout, addr
+                    clients[conn] = [b''], timeout, addr
                     if next_timeout is None:
                         next_timeout = timeout
                     else:
@@ -60,26 +61,30 @@ class Server(object):
                 else:
                     data, timeout, addr = clients[conn]
                     res = conn.recv(self.LENGTH - len(data))
+                    done = not res
                     if res:
                         end = res.find(b'\n')
-                        if end != -1:
-                            end += len(data)
-                            data += res[:end]
-                            res = None
+                        while end != -1:
+                            data[-1] += res[:end]
+                            if len(data) == self._client_lines:
+                                done = True
+                                break
+                            data.append(b'')
+                            res = res[end+1:]
+                            end = res.find(b'\n')
                         else:
-                            data += res
-                    if not res or len(data) >= self.LENGTH:
+                            data[-1] += res
+                    if done or len(data[-1]) >= self.LENGTH:
                         del clients[conn]
                         try:
-                            self._callback(data, conn, addr)
+                            if len(data) == self._client_lines:
+                                self._callback(data, conn, addr)
                         except Exception:
                             conn.send(b"internal server error\nERROR\n")
                             raise
                         finally:
                             conn.close()
                         next_timeout = -1
-                    else:
-                        clients[conn] = data, timeout, addr
 
             if next_timeout == -1:
                 if clients:

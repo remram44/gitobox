@@ -17,7 +17,7 @@ class Synchronizer(object):
                                          self._directory_changed,
                                          self._lock,
                                          timeout)
-        self._hook_server = Server(5055, self._hook_triggered)
+        self._hook_server = Server(5055, 2, self._hook_triggered)
         #self._repository = GitRepository(repository, branchname)
 
     def run(self):
@@ -36,21 +36,23 @@ class Synchronizer(object):
         # TODO : Create Git commit changing these files
 
     def _hook_triggered(self, data, conn, addr):
-        if data != b"notsosecret":
+        passwd, ref = data
+        if passwd != b"notsosecret":
             logging.debug("Got invalid message on hook server from %s",
                           addr)
             conn.send(b"hook auth failed\nERROR\n")
             return
-        logging.info("Hook triggered from %s", addr)
+        logging.info("Hook triggered from %s", addr, )
         if not self._lock.acquire(blocking=False):
             logging.info("Lock is held, failing...")
             conn.send(b"update is in progress, try again later\nERROR\n")
         else:
             try:
-                conn.send(b"updating directory...\n")
+                conn.send(b"updating directory to %s...\n" % ref[:7])
                 # TODO : Write files to directory
                 conn.send(b"synced directory updated!\nOK\n")
-                logging.info("Directory updated")
+                logging.info("Directory updated to %s",
+                             ref.decode('ascii')[:7])
             finally:
                 self._lock.release()
 
