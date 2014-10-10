@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import logging
 from threading import Semaphore, Thread
 
+from gitobox.git import GitRepository
 from gitobox.server import Server
 from gitobox.utils import unicode_
 from gitobox.watch import DirectoryWatcher
@@ -19,7 +20,7 @@ class Synchronizer(object):
                                          timeout,
                                          assume_changed=True)
         self._hook_server = Server(5055, 2, self._hook_triggered)
-        #self._repository = GitRepository(repository, branchname)
+        self._repository = GitRepository(repository, folder, branchname)
 
     def run(self):
         watcher_thread = Thread(target=self._watcher.run)
@@ -35,7 +36,7 @@ class Synchronizer(object):
         else:
             logging.warning("Paths changed: %s",
                             " ".join(unicode_(p) for p in paths))
-        # TODO : Create Git commit changing these files
+        self._repository.check_in(paths)
 
     def _hook_triggered(self, data, conn, addr):
         passwd, ref = data
@@ -51,7 +52,7 @@ class Synchronizer(object):
         else:
             try:
                 conn.send(b"updating directory to %s...\n" % ref[:7])
-                # TODO : Write files to directory
+                self._repository.check_out(ref)
                 conn.send(b"synced directory updated!\nOK\n")
                 logging.info("Directory updated to %s",
                              ref.decode('ascii')[:7])
