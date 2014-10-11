@@ -69,11 +69,16 @@ def main():
                         help="Git repository to synchronize")
     parser.add_argument('-b', '--branch', action='store', default='master',
                         help="Git branch to synchronize (default: master)")
+    parser.add_argument('-t', '--timeout', action='store', type=int,
+                        default='5',
+                        help="Time to wait after last directory change before "
+                        "committing (in seconds)")
 
     args = parser.parse_args()
     setup_logging(args.verbosity)
 
-    synchronize(Path(args.folder), Path(args.repository), args.branch, 5)
+    synchronize(Path(args.folder), Path(args.repository), args.branch,
+                args.timeout)
 
     sys.exit(0)
 
