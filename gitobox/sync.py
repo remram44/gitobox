@@ -27,7 +27,13 @@ class Synchronizer(object):
         watcher_thread.setDaemon(True)
         watcher_thread.start()
 
-        self._hook_server.run()
+        try:
+            self._hook_server.run()
+        except KeyboardInterrupt:
+            logging.warning("Got KeyboardInterrupt, exiting...")
+        except Exception:
+            logging.critical("Exiting after unhandled exception!")
+            raise
 
     def _directory_changed(self, paths=None):
         # We got called back though the ResettableTimer, so the lock is held
