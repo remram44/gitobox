@@ -21,34 +21,34 @@ class GitRepository(object):
         self._git = ['git', '--git-dir', self.repo.path,
                      '--work-tree', self.workdir.path]
 
-        cmd = self._git + ['symbolic-ref', 'HEAD', 'refs/heads/%s' % branch]
-        logging.debug("Running: %s", repr_cmdline(cmd))
-        subprocess.check_call(cmd)
+        self._run(['symbolic-ref', 'HEAD', 'refs/heads/%s' % branch])
 
-        cmd = self._git + ['config', 'receive.denyCurrentBranch', 'ignore']
+        self._run(['config', 'receive.denyCurrentBranch', 'ignore'])
+
+    def _run(self, cmd, allow_fail=False, stdout=False):
+        cmd = self._git + cmd
         logging.debug("Running: %s", repr_cmdline(cmd))
-        subprocess.check_call(cmd)
+
+        if allow_fail:
+            return subprocess.call(cmd)
+        elif stdout:
+            return subprocess.check_output(cmd)
+        else:
+            return subprocess.check_call(cmd)
 
     def check_in(self, paths=None):
         """Commit changes to the given files (if there are differences).
 
         If `paths` is None, assumes that any file might have changed.
         """
-        cmd = (self._git + ['add'] +
-               (['.'] if paths is None
-                else [p.path for p in paths]))
-        logging.debug("Running: %s", repr_cmdline(cmd))
-        subprocess.check_call(cmd, cwd=self.workdir.path)
+        self._run(['add'] + (['.'] if paths is None
+                             else [p.path for p in paths]))
 
-        cmd = self._git + ['commit', '-m', '(gitobox automatic commit)']
-        logging.debug("Running: %s", repr_cmdline(cmd))
-        ret = subprocess.call(cmd)
-
+        ret = self._run(['commit', '-m', '(gitobox automatic commit)'],
+                        allow_fail=True)
 
         if ret == 0:
-            cmd = self._git + ['rev-parse', 'HEAD']
-            logging.debug("Running: %s", repr_cmdline(cmd))
-            ref = subprocess.check_output(cmd).strip()
+            ref = self._run(['rev-parse', 'HEAD'], stdout=True)
             logging.info("Created revision %s", ref.decode('ascii'))
         else:
             logging.info("No revision created")
