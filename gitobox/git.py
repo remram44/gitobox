@@ -41,9 +41,7 @@ class GitRepository(object):
 
         If `paths` is None, assumes that any file might have changed.
         """
-        self._run(['add'] + (['.'] if paths is None
-                             else [p.path for p in paths]))
-
+        self._run(['add', '.'])
         ret = self._run(['commit', '-m', '(gitobox automatic commit)'],
                         allow_fail=True)
 
