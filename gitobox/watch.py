@@ -16,8 +16,7 @@ manager = pyinotify.WatchManager()
 class DirectoryWatcher(pyinotify.ProcessEvent):
     ALL_CHANGED = None
 
-    def __init__(self, folder, callback, lock, timeout,
-                 assume_changed=False):
+    def __init__(self, folder, callback, lock, timeout):
         self.__callback = callback
 
         self.notifier = pyinotify.Notifier(manager, self)
@@ -32,10 +31,10 @@ class DirectoryWatcher(pyinotify.ProcessEvent):
 
         self.__timer = ResettableTimer(timeout, self._timer_expired,
                                        lock=lock)
-        if assume_changed:
-            self.__changes.add(DirectoryWatcher.ALL_CHANGED)
-            logging.info("Assuming all files are changed")
-            self.__timer.start()
+
+    def assume_all_changed(self):
+        self.__changes.add(DirectoryWatcher.ALL_CHANGED)
+        self.__timer.start()
 
     def run(self):
         self.notifier.loop()

@@ -17,8 +17,8 @@ class Synchronizer(object):
         self._watcher = DirectoryWatcher(folder,
                                          self._directory_changed,
                                          self._lock,
-                                         timeout,
-                                         assume_changed=True)
+                                         timeout)
+        self._watcher.assume_all_changed()
         self._hook_server = Server(5055, 2, self._hook_triggered)
         self._repository = GitRepository(repository, folder, branchname)
 
@@ -53,11 +53,28 @@ class Synchronizer(object):
             try:
                 conn.send(b"updating directory to %s...\n" % ref[:7])
                 self._repository.check_out(ref)
-                conn.send(b"synced directory updated!\nOK\n")
+                conn.send(b"synced directory updated!\n")
                 logging.info("Directory updated to %s",
                              ref.decode('ascii')[:7])
             finally:
                 self._lock.release()
+
+            if self._repository.has_changes():
+                # The lock has been released, changes now happening in DropBox
+                # will start DirectoryWatcher's timer as usual.
+                # However, while we were copying files from Git into the
+                # directory, it might have been changed (i.e. DropBox might
+                # have conflicted). In this case, a new commit will happen in a
+                # few seconds
+                logging.info("Conflict detected during directory update")
+                self._watcher.assume_all_changed()
+                # Tell the pusher about it, so he can fetch
+                conn.send(b"WARNING: DROPBOX CONFLICT\n"
+                          b"the directory was updated while changes were "
+                          b"being written from Git to the directory; "
+                          b"leave DropBox time to sync then fetch again\n")
+
+            conn.send(b"OK\n")
 
 
 def synchronize(folder, repository, branchname, timeout):
