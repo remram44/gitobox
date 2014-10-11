@@ -44,15 +44,14 @@ class GitRepository(object):
         logging.debug("Running: %s", repr_cmdline(cmd))
         ret = subprocess.call(cmd)
 
-        cmd = self._git + ['rev-parse', 'HEAD']
-        logging.debug("Running: %s", repr_cmdline(cmd))
-        ref = subprocess.check_output(cmd).strip()
 
         if ret == 0:
+            cmd = self._git + ['rev-parse', 'HEAD']
+            logging.debug("Running: %s", repr_cmdline(cmd))
+            ref = subprocess.check_output(cmd).strip()
             logging.info("Created revision %s", ref.decode('ascii'))
         else:
-            logging.info("No revision created, still at %s",
-                         ref.decode('ascii'))
+            logging.info("No revision created")
 
     def check_out(self, ref):
         """Check out the given revision.
