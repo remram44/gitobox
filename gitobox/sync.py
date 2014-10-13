@@ -18,10 +18,9 @@ class Synchronizer(object):
                                          self._directory_changed,
                                          self._lock,
                                          timeout)
-        self._watcher.assume_all_changed()
-        self._hook_server = Server(2, self._hook_triggered)
         # Make up a random password
         self.password = make_unique_bytestring()
+        self._hook_server = Server(2, self._hook_triggered)
         self._repository = GitRepository(repository, folder, branchname,
                                          self.password,
                                          self._hook_server.port)
@@ -29,6 +28,7 @@ class Synchronizer(object):
     def run(self):
         watcher_thread = Thread(target=self._watcher.run)
         watcher_thread.setDaemon(True)
+        self._watcher.assume_all_changed()
         watcher_thread.start()
 
         try:
