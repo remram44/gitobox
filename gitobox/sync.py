@@ -13,14 +13,22 @@ class Synchronizer(object):
     """Main application logic: synchronizes folder with Git repo.
     """
     def __init__(self, folder, repository, branchname, timeout):
+        # The global lock for synchronization operations
         self._lock = Semaphore(1)
+
+        # Watches the directory for file changes
         self._watcher = DirectoryWatcher(folder,
                                          self._directory_changed,
                                          self._lock,
                                          timeout)
+
         # Make up a random password
         self.password = make_unique_bytestring()
+
+        # Listens for connections from the Git hook
         self._hook_server = Server(2, self._hook_triggered)
+
+        # Sets up the directory (installs the hook)
         self._repository = GitRepository(repository, folder, branchname,
                                          self.password,
                                          self._hook_server.port)
