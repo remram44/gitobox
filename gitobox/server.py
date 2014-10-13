@@ -87,7 +87,7 @@ class Server(object):
                         next_timeout = min(next_timeout, timeout)
                 else:
                     data, timeout, addr = clients[conn]
-                    res = conn.recv(self.LENGTH - len(data))
+                    res = conn.recv(self.LENGTH - len(data[-1]))
                     done = not res
                     if res:
                         end = res.find(b'\n')
