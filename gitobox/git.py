@@ -28,9 +28,9 @@ def shell_quote(s):
     if not isinstance(s, bytes):
         s = s.encode('utf-8')
     if any(c in s for c in b' \t\n\r\x0b\x0c*$\\"\''):
-        return b'"%s"' % (s.replace(b'\\', b'\\\\')
-                           .replace(b'"', b'\\"')
-                           .replace(b'$', b'\\$'))
+        return b'"' + (s.replace(b'\\', b'\\\\')
+                        .replace(b'"', b'\\"')
+                        .replace(b'$', b'\\$')) + b'"'
     else:
         return s
 
@@ -72,7 +72,7 @@ class GitRepository(object):
                 if line.find(b'{{') != -1:
                     line = (line
                             .replace(b'{{PASSWORD}}', shell_quote(password))
-                            .replace(b'{{PORT}}', str(port))
+                            .replace(b'{{PORT}}', shell_quote(str(port)))
                             .replace(b'{{BRANCH}}', shell_quote(branch)))
                 fp.write(line)
         template.close()
@@ -145,7 +145,7 @@ class GitRepository(object):
                     removed_files = False
 
             # Replace all the files
-            tar.extractall(self.workdir.path)
+            tar.extractall(str(self.workdir))
 
             tar.close()
         finally:

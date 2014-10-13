@@ -69,7 +69,7 @@ class Synchronizer(object):
             conn.send(b"update is in progress, try again later\nERROR\n")
         else:
             try:
-                conn.send(b"updating directory to %s...\n" % ref[:7])
+                conn.send(b"updating directory to " + ref[:7] + b"...\n")
                 self._repository.check_out(ref)
                 conn.send(b"synced directory updated!\n")
                 logging.info("Directory updated to %s",
