@@ -22,7 +22,9 @@ class Synchronizer(object):
         self._hook_server = Server(2, self._hook_triggered)
         # Make up a random password
         self.password = make_unique_bytestring()
-        self._repository = GitRepository(repository, folder, branchname)
+        self._repository = GitRepository(repository, folder, branchname,
+                                         self.password,
+                                         self._hook_server.port)
 
     def run(self):
         watcher_thread = Thread(target=self._watcher.run)

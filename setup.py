@@ -10,12 +10,13 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 with open('README.rst') as fp:
     description = fp.read()
 req = ['pyinotify',
-       'rpaths']
+       'rpaths>=0.7']
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='gitobox',
       version='0.1',
       packages=['gitobox'],
+      package_data={'gitobox': ['hooks/*']},
       entry_points={'console_scripts': [
           'gitobox = gitobox.main:main']},
       install_requires=req,

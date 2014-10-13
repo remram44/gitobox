@@ -1,8 +1,11 @@
 #!/bin/sh
+# Gitobox hook: do not edit!
+# This file is installed by Gitobox and will be overridden the next time it is
+# started
 
-GITOBOX_PASSWORD=notsosecret
-GITOBOX_PORT=5055
-GITOBOX_BRANCH=master
+GITOBOX_PASSWORD={{PASSWORD}}
+GITOBOX_PORT={{PORT}}
+GITOBOX_BRANCH={{BRANCH}}
 
 # --- Command line
 refname="$1"
@@ -11,24 +14,24 @@ newrev="$3"
 
 # --- Safety check
 if [ -z "$GIT_DIR" ]; then
-	echo "Don't run this script from the command line." >&2
-	echo " (if you want, you could supply GIT_DIR then run" >&2
-	echo "  $0 <ref> <oldrev> <newrev>)" >&2
-	exit 1
+    echo "Don't run this script from the command line." >&2
+    echo " (if you want, you could supply GIT_DIR then run" >&2
+    echo "  $0 <ref> <oldrev> <newrev>)" >&2
+    exit 1
 fi
 
 if [ -z "$refname" -o -z "$oldrev" -o -z "$newrev" ]; then
-	echo "usage: $0 <ref> <oldrev> <newrev>" >&2
-	exit 1
+    echo "usage: $0 <ref> <oldrev> <newrev>" >&2
+    exit 1
 fi
 
 # --- Check types
 # if $newrev is 0000...0000, it's a commit to delete a ref.
 zero="0000000000000000000000000000000000000000"
 if [ "$newrev" = "$zero" ]; then
-	newrev_type=delete
+    newrev_type=delete
 else
-	newrev_type=$(git cat-file -t $newrev)
+    newrev_type=$(git cat-file -t $newrev)
 fi
 
 # --- Gitobox communication logic
@@ -49,7 +52,7 @@ do_sync(){
 # --- Dispatches according to event type
 case "$refname","$newrev_type" in
     refs/heads/$GITOBOX_BRANCH,commit)
-        do_sync "$newrev"
+        do_sync "$newrev" || exit 1
         ;;
     refs/heads/$GITOBOX_BRANCH,delete)
         echo "*** You can't delete branch 'gitobox'" >&2

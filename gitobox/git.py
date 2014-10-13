@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import pkg_resources
 from rpaths import Path
 import subprocess
 import sys
@@ -19,8 +20,23 @@ def repr_cmdline(cmd):
     return ' '.join(decode_utf8(s) for s in cmd)
 
 
+def shell_quote(s):
+    """Given bl"a, returns "bl\\"a".
+
+    Returns bytes.
+    """
+    if not isinstance(s, bytes):
+        s = s.encode('utf-8')
+    if any(c in s for c in b' \t\n\r\x0b\x0c*$\\"\''):
+        return b'"%s"' % (s.replace(b'\\', b'\\\\')
+                           .replace(b'"', b'\\"')
+                           .replace(b'$', b'\\$'))
+    else:
+        return s
+
+
 class GitRepository(object):
-    def __init__(self, repo, workdir, branch):
+    def __init__(self, repo, workdir, branch, password, port):
         if not (repo / 'objects').is_dir() or not (repo / 'refs').is_dir():
             logging.critical("Not a Git repository: %s", repo)
             sys.exit(1)
@@ -32,6 +48,35 @@ class GitRepository(object):
                      '--work-tree', self.workdir.path]
 
         self._run(['config', 'receive.denyCurrentBranch', 'ignore'])
+
+        # Installs hook
+        update_hook = self.repo / 'hooks' / 'update'
+        if update_hook.exists():
+            with update_hook.open('rb') as fp:
+                line = fp.readline().rstrip()
+                if line.startswith(b'#!'):
+                    line = fp.readline().rstrip()
+                if line != b'# Gitobox hook: do not edit!':
+                    logging.critical("Repository at %s already has an update "
+                                     "hook; not overriding!\n"
+                                     "Please delete it and try again\n",
+                                     self.repo)
+                    sys.exit(1)
+                else:
+                    logging.debug("Replacing update hook")
+        else:
+            logging.debug("Installing update hook")
+        template = pkg_resources.resource_stream('gitobox', 'hooks/update')
+        with update_hook.open('wb') as fp:
+            for line in template:
+                if line.find(b'{{') != -1:
+                    line = (line
+                            .replace(b'{{PASSWORD}}', shell_quote(password))
+                            .replace(b'{{PORT}}', str(port))
+                            .replace(b'{{BRANCH}}', shell_quote(branch)))
+                fp.write(line)
+        template.close()
+        update_hook.chmod(0o755)
 
     def _run(self, cmd, allow_fail=False, stdout=False):
         logging.debug("Running: %s", repr_cmdline(['git'] + cmd))
