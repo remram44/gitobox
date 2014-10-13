@@ -1,15 +1,18 @@
+from __future__ import unicode_literals
+
 import logging
 import os
 from rpaths import Path
 import subprocess
+import sys
 import tarfile
 
 
 def decode_utf8(s):
-    if isinstance(s, unicode):
-        return s
-    else:
+    if isinstance(s, bytes):
         return s.decode('utf-8', 'replace')
+    else:
+        return s
 
 
 def repr_cmdline(cmd):
@@ -18,6 +21,10 @@ def repr_cmdline(cmd):
 
 class GitRepository(object):
     def __init__(self, repo, workdir, branch):
+        if not (repo / 'objects').is_dir() or not (repo / 'refs').is_dir():
+            logging.critical("Not a Git repository: %s", repo)
+            sys.exit(1)
+
         self.repo = repo.absolute()
         self.workdir = workdir.absolute()
         self.branch = branch
@@ -27,8 +34,8 @@ class GitRepository(object):
         self._run(['config', 'receive.denyCurrentBranch', 'ignore'])
 
     def _run(self, cmd, allow_fail=False, stdout=False):
+        logging.debug("Running: %s", repr_cmdline(['git'] + cmd))
         cmd = self._git + cmd
-        logging.debug("Running: %s", repr_cmdline(cmd))
 
         if allow_fail:
             return subprocess.call(cmd)
