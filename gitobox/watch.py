@@ -1,3 +1,9 @@
+"""Directory-watching logic.
+
+Contains :class:`~gitobox.watch.DirectoryWatcher`, the class that monitors the
+directory for changes. Uses `pyinotify`, so it's only available on Linux.
+"""
+
 from __future__ import unicode_literals
 
 import logging

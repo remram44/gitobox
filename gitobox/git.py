@@ -1,3 +1,8 @@
+"""Logic for handling Git repositories.
+
+Contains the :class:`~gitobox.git.GitRepository` class.
+"""
+
 from __future__ import unicode_literals
 
 import logging

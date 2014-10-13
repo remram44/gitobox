@@ -1,3 +1,14 @@
+"""Generic timer used to wait directory changes to stop.
+
+Contains :class:`~gitobox.timer.ResettableTimer`, a timer that waits a given
+amount of time after the *last* call to
+:meth:`~gitobox.timer.ResettableTimer.start()`. This means that every call to
+`start()` makes the timer restart.
+
+Also acquires a lock while ticking, allowing Gitobox to not accept hooks while
+waiting for the tree to be stable.
+"""
+
 from __future__ import unicode_literals
 
 from threading import Condition, Thread

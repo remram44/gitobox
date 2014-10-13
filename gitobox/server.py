@@ -1,3 +1,9 @@
+"""Hook server code.
+
+Contains the :class:`~gitobox.server.Server` class which is used to communicate
+with the Git hook.
+"""
+
 from __future__ import unicode_literals
 
 import logging
@@ -10,6 +16,14 @@ from gitobox.utils import irange, iteritems, itervalues
 
 
 class Server(object):
+    """A server, that receives a bunch of lines on a TCP socket.
+
+    Listens on a random TCP port (`port` attribute) and calls back the given
+    function when the specified number of lines have been received.
+
+    The callback gets passed the data (list of bytes objects), the connection
+    and the address, so more data can be exchanged.
+    """
     TIMEOUT = 5.0
     LENGTH = 1024
 

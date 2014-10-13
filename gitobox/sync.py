@@ -1,3 +1,6 @@
+"""Main application logic: class :class:`~gitobox.sync.Synchronizer`.
+"""
+
 from __future__ import unicode_literals
 
 import logging
@@ -10,7 +13,7 @@ from gitobox.watch import DirectoryWatcher
 
 
 class Synchronizer(object):
-    """Main application logic: synchronizes folder with Git repo.
+    """Main application logic: synchronizes folder with a Git repository.
     """
     def __init__(self, folder, repository, branchname, timeout):
         # The global lock for synchronization operations

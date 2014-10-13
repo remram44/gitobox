@@ -14,7 +14,7 @@ req = ['pyinotify',
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='gitobox',
-      version='0.1',
+      version='0.2',
       packages=['gitobox'],
       package_data={'gitobox': ['hooks/*']},
       entry_points={'console_scripts': [
@@ -33,7 +33,7 @@ setup(name='gitobox',
       keywords=['git', 'dropbox', 'drive', 'gdrive', 'cloud', 'dumb', 'sync',
                 'synchronization', 'collaboration'],
       classifiers=[
-          'Development Status :: 2 - Pre-Alpha',
+          'Development Status :: 4 - Beta',
           'Environment :: Console',
           'Environment :: No Input/Output (Daemon)',
           'Intended Audience :: Developers',

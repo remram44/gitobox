@@ -1,3 +1,6 @@
+"""Various utilities, mainly related to PY2/PY3 compatibility.
+"""
+
 from __future__ import unicode_literals
 
 import random
