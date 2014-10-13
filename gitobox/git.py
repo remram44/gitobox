@@ -89,12 +89,13 @@ class GitRepository(object):
         else:
             return subprocess.check_call(cmd)
 
-    def has_changes(self):
-        """Determines whether the working copy has changes.
+    def has_changes(self, ref):
+        """Determines whether the working copy has changes, compared to `ref`.
         """
-        self._run(['symbolic-ref', 'HEAD', 'refs/heads/%s' % self.branch])
+        self._run(['update-ref', '--no-deref', 'HEAD', ref])
         self._run(['add', '.'])
         status = self._run(['status', '--porcelain'], stdout=True)
+        self._run(['symbolic-ref', 'HEAD', 'refs/heads/%s' % self.branch])
         return bool(status.strip())
 
     def check_in(self, paths=None):

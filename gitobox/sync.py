@@ -69,7 +69,7 @@ class Synchronizer(object):
             finally:
                 self._lock.release()
 
-            if self._repository.has_changes():
+            if self._repository.has_changes(ref):
                 # The lock has been released, changes now happening in DropBox
                 # will start DirectoryWatcher's timer as usual.
                 # However, while we were copying files from Git into the
