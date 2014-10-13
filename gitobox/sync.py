@@ -5,7 +5,7 @@ from threading import Semaphore, Thread
 
 from gitobox.git import GitRepository
 from gitobox.server import Server
-from gitobox.utils import unicode_
+from gitobox.utils import unicode_, make_unique_bytestring
 from gitobox.watch import DirectoryWatcher
 
 
@@ -19,7 +19,9 @@ class Synchronizer(object):
                                          self._lock,
                                          timeout)
         self._watcher.assume_all_changed()
-        self._hook_server = Server(5055, 2, self._hook_triggered)
+        self._hook_server = Server(2, self._hook_triggered)
+        # Make up a random password
+        self.password = make_unique_bytestring()
         self._repository = GitRepository(repository, folder, branchname)
 
     def run(self):
@@ -46,7 +48,7 @@ class Synchronizer(object):
 
     def _hook_triggered(self, data, conn, addr):
         passwd, ref = data
-        if passwd != b"notsosecret":
+        if passwd != self.password:
             logging.debug("Got invalid message on hook server from %s",
                           addr)
             conn.send(b"hook auth failed\nERROR\n")

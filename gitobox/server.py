@@ -3,34 +3,47 @@ from __future__ import unicode_literals
 import logging
 import select
 import socket
+import sys
 import time
 
-from gitobox.utils import iteritems, itervalues
+from gitobox.utils import irange, iteritems, itervalues
 
 
 class Server(object):
     TIMEOUT = 5.0
     LENGTH = 1024
 
-    def __init__(self, port, client_lines, callback):
+    def __init__(self, client_lines, callback):
         self._callback = callback
         self._client_lines = client_lines
-        self._port = port
+
+        # Choose a port
+        self._server = None
+        for port in irange(15550, 15580):
+            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            address = ('127.0.0.1', port)
+            try:
+                server.bind(address)
+                server.listen(5)
+            except socket.error:
+                pass
+            else:
+                logging.debug("Server created on %s:%d", *address)
+                self._server = server
+                self.port = port
+                break
+        if self._server is None:
+            logging.critical("Couldn't find a TCP port to listen on")
+            sys.exit(1)
 
     def run(self):
         clients = {}
-
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        address = ('127.0.0.1', self._port)
-        server.bind(address)
-        server.listen(5)
-        logging.debug("Server created on %s:%d", *address)
 
         next_timeout = None
         now = time.time()
 
         while True:
-            sockets = [server]
+            sockets = [self._server]
             sockets.extend(clients)
             timeout = (None if next_timeout is None
                        else next_timeout - now + 0.2)
@@ -49,8 +62,8 @@ class Server(object):
                     next_timeout = -1
 
             for sock in rlist:
-                if sock == server:
-                    conn, addr = server.accept()
+                if sock == self._server:
+                    conn, addr = self._server.accept()
                     logging.debug("Connection from %s", addr)
                     timeout = now + self.TIMEOUT
                     clients[conn] = [b''], timeout, addr
