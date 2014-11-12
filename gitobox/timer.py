@@ -35,6 +35,7 @@ class ResettableTimer(object):
         self.args = args
         self.kwargs = kwargs
         self.lock = lock
+        self.executing = False
 
         # Only start the thread on the first start()
         self.started = False
@@ -52,8 +53,9 @@ class ResettableTimer(object):
         """
         with self.cond:
             if (self.status == ResettableTimer.IDLE and
-                    self.lock is not None
-                    and not self.lock.acquire(blocking=False)):
+                    not self.executing and
+                    self.lock is not None and
+                    not self.lock.acquire(blocking=False)):
                 return False
             if self.started:
                 self.status = ResettableTimer.RESET
@@ -71,9 +73,10 @@ class ResettableTimer(object):
         with self.cond:
             if self.status != ResettableTimer.IDLE:
                 self.status = ResettableTimer.IDLE
-                self.cond.notifyAll()
-                if self.lock is not None:
-                    self.lock.release()
+                if not self.executing:
+                    self.cond.notifyAll()
+                    if self.lock is not None:
+                        self.lock.release()
 
     def _run(self):
         with self.cond:
@@ -88,10 +91,12 @@ class ResettableTimer(object):
                     self.status = ResettableTimer.PRIMED
                 # Still PRIMED: we timed out without interruption, call back
                 elif self.status == ResettableTimer.PRIMED:
+                    self.status = ResettableTimer.IDLE
+                    self.executing = True
                     try:
                         self.function(*self.args, **self.kwargs)
                     except Exception:
                         traceback.print_exc()
-                    self.status = ResettableTimer.IDLE
+                    self.executing = False
                     if self.lock is not None:
                         self.lock.release()
