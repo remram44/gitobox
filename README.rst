@@ -3,7 +3,37 @@ Gitobox
 
 This program synchronizes a DropBox directory (or any directory) with a Git repository. Any change in the directory will create a new commit on a specified branch, and a push to that branch will update the directory.
 
+Note that this is different from putting your .git folder inside your DropBox. Here, you don't have anything git-related in DropBox, Gitobox gives you a separate, 2-way-synced Git repository that you can use instead of DropBox (or just keep using DropBox and have the Git history for future reference).
+
 Currently, only Linux is targeted (because inotify is only available there), but more platforms can probably be added without much efforts. Of course, if collaboration between Git and DropBox users is needed, there only need to be one server translating; you don't need to run it on each client. This is why this software primarily targets servers.
+
+Deployment Guide
+----------------
+
+First, this is intended to be deployed on some kind of server or "always on" machine. While it will work correctly in other setups, Gitobox cannot detect and record versions that happen while it is offline, so you would get a single "big commit" when synchronization resumes, making the history less useful.
+
+Installing Gitobox is easy if you have Python and `pip <https://pip.pypa.io/>`_ installed::
+
+    $ pip install gitobox
+
+Simply create a Git repository that will be synced::
+
+    $ git init dropbox-project
+
+The automatic commits will be created with the local identity, so you might want to set that as well::
+
+    $ pushd dropbox-project
+    $ git config user.name "dropbox"
+    $ git config user.email "gitobox@my-own-server"
+    $ popd
+
+then start Gitobox::
+
+    $ gitobox ~/Dropbox/my-project dropbox-project/.git
+
+You can then clone that repository and tada! You get to work with Git instead of Dropbox::
+
+    $ git clone my-working-copy dropbox-project
 
 FAQ
 ---
