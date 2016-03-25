@@ -23,65 +23,65 @@ class DirectoryWatcher(pyinotify.ProcessEvent):
     ALL_CHANGED = None
 
     def __init__(self, folder, callback, lock, timeout):
-        self.__callback = callback
+        self._callback = callback
 
         self.notifier = pyinotify.Notifier(manager, self)
 
-        self.__folder = folder
-        self.__changes = set()
-        self.__dirs = {}
-        self.__dirs[folder] = manager.add_watch(str(folder), mask)
+        self._folder = folder
+        self._changes = set()
+        self._dirs = {}
+        self._dirs[folder] = manager.add_watch(str(folder), mask)
         for path in folder.recursedir():
             if path.is_dir():
-                self.__dirs[path] = manager.add_watch(str(path), mask)
+                self._dirs[path] = manager.add_watch(str(path), mask)
 
-        self.__timer = ResettableTimer(timeout, self._timer_expired,
+        self._timer = ResettableTimer(timeout, self._timer_expired,
                                        lock=lock)
 
     def assume_all_changed(self):
-        self.__changes.add(DirectoryWatcher.ALL_CHANGED)
-        self.__timer.start()
+        self._changes.add(DirectoryWatcher.ALL_CHANGED)
+        self._timer.start()
 
     def run(self):
         self.notifier.loop()
 
     def _timer_expired(self):
-        changes = self.__changes
-        self.__changes = set()
+        changes = self._changes
+        self._changes = set()
         logging.info("Directory stable, syncing...")
         if DirectoryWatcher.ALL_CHANGED in changes:
-            self.__callback()
+            self._callback()
         else:
-            self.__callback(changes)
+            self._callback(changes)
 
     def __add(self, path, moved):
         logging.info("%s %s: %s",
                      "Directory" if path.is_dir() else "File",
                      "moved in" if moved else "created",
                      path)
-        self.__changes.add(path)
+        self._changes.add(path)
         if path.is_dir():
             res = manager.add_watch(str(path), mask)
             assert len(res) == 1
             wd = next(iter(res.values()))
-            self.__dirs[path] = wd
-        self.__timer.start()
+            self._dirs[path] = wd
+        self._timer.start()
 
     def __remove(self, path, moved):
         logging.info("%s %s: %s",
                      "Directory" if path.is_dir() else "File",
                      "moved out" if moved else "removed",
                      path)
-        self.__changes.add(path)
-        if moved and path in self.__dirs:
-            wd = self.__dirs.pop(path)
+        self._changes.add(path)
+        if moved and path in self._dirs:
+            wd = self._dirs.pop(path)
             manager.rm_watch(wd)
-        self.__timer.start()
+        self._timer.start()
 
     def __changed(self, path):
         logging.info("File changed: %s", path)
-        self.__changes.add(path)
-        self.__timer.start()
+        self._changes.add(path)
+        self._timer.start()
 
     def process_IN_CREATE(self, event):
         path = Path(event.pathname)
