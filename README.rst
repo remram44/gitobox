@@ -5,8 +5,6 @@ This program synchronizes a DropBox directory (or any directory) with a Git repo
 
 Note that this is different from putting your .git folder inside your DropBox. Here, you don't have anything git-related in DropBox, Gitobox gives you a separate, 2-way-synced Git repository that you can use instead of DropBox (or just keep using DropBox and have the Git history for future reference).
 
-Currently, only Linux is targeted (because inotify is only available there), but more platforms can probably be added without much efforts. Of course, if collaboration between Git and DropBox users is needed, there only need to be one server translating; you don't need to run it on each client. This is why this software primarily targets servers.
-
 Deployment Guide
 ----------------
 
@@ -51,7 +49,7 @@ Yes! Although not very thoroughly (and automatically?) tested yet, it does work.
 Can I use something else than Linux?
 ''''''''''''''''''''''''''''''''''''
 
-I use ``inotify(2)``, so supporting other platforms than Linux is just a matter of providing an alternative method of watching a directory. I have no intention of doing that myself, but patches are welcome!
+Yes! Through the use of `watchdog <https://github.com/gorakhargosh/watchdog>`__, all platforms should now be supported.
 
 Can I use something else than Git?
 ''''''''''''''''''''''''''''''''''
