@@ -7,7 +7,6 @@ directory for changes. Uses `pyinotify`, so it's only available on Linux.
 from __future__ import unicode_literals
 
 import logging
-from rpaths import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -27,7 +26,7 @@ class DirectoryWatcher(FileSystemEventHandler):
         self.observer.schedule(self, str(folder), recursive=True)
 
         self._timer = ResettableTimer(timeout, self._timer_expired,
-                                       lock=lock)
+                                      lock=lock)
 
     def assume_all_changed(self):
         self._changes.add(DirectoryWatcher.ALL_CHANGED)

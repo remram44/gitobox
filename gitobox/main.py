@@ -58,11 +58,11 @@ def main():
                          help="augments verbosity level")
 
     parser = argparse.ArgumentParser(
-            description="gitobox synchronizes a directory with a Git "
-                        "repository; it is particularly useful to make a Git "
-                        "branch out of changes happening in DropBox or "
-                        "similar \"dump\" collaboration software",
-            parents=[options])
+        description="gitobox synchronizes a directory with a Git "
+                    "repository; it is particularly useful to make a Git "
+                    "branch out of changes happening in DropBox or "
+                    "similar \"dump\" collaboration software",
+        parents=[options])
     parser.add_argument('folder',
                         help="Folder to watch for changes")
     parser.add_argument('repository',
