@@ -98,7 +98,7 @@ class GitRepository(object):
         """Determines whether the working copy has changes, compared to `ref`.
         """
         self._run(['update-ref', '--no-deref', 'HEAD', ref])
-        self._run(['add', '.'])
+        self._run(['add', '--all', '.'])
         status = self._run(['status', '--porcelain'], stdout=True)
         self._run(['symbolic-ref', 'HEAD', 'refs/heads/%s' % self.branch])
         return bool(status.strip())
@@ -110,7 +110,7 @@ class GitRepository(object):
         """
         self._run(['symbolic-ref', 'HEAD', 'refs/heads/%s' % self.branch])
 
-        self._run(['add', '.'])
+        self._run(['add', '--all', '.'])
         ret = self._run(['commit', '-m', '(gitobox automatic commit)'],
                         allow_fail=True)
 
