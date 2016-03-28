@@ -68,9 +68,9 @@ class Server(object):
             # Timeouts
             for sock, (data, timeout, addr) in list(iteritems(clients)):
                 if now > timeout:
-                    del clients[conn]
-                    conn.send(b"timed out\nERROR\n")
-                    conn.close()
+                    del clients[sock]
+                    sock.send(b"timed out\nERROR\n")
+                    sock.close()
                     logging.debug("Connection from %s timed out",
                                   addr)
                     next_timeout = -1
