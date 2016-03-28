@@ -14,7 +14,7 @@ req = ['watchdog',
 if sys.version_info < (2, 7):
     req.append('argparse')
 setup(name='gitobox',
-      version='0.2',
+      version='0.3',
       packages=['gitobox'],
       package_data={'gitobox': ['hooks/*']},
       entry_points={'console_scripts': [
