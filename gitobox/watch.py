@@ -7,98 +7,66 @@ directory for changes. Uses `pyinotify`, so it's only available on Linux.
 from __future__ import unicode_literals
 
 import logging
-import pyinotify
 from rpaths import Path
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from gitobox.timer import ResettableTimer
 
 
-mask = (pyinotify.IN_MOVED_FROM | pyinotify.IN_MOVED_TO |
-        pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_CLOSE_WRITE)
-
-manager = pyinotify.WatchManager()
-
-
-class DirectoryWatcher(pyinotify.ProcessEvent):
+class DirectoryWatcher(FileSystemEventHandler):
     ALL_CHANGED = None
 
     def __init__(self, folder, callback, lock, timeout):
-        self.__callback = callback
+        self._callback = callback
 
-        self.notifier = pyinotify.Notifier(manager, self)
+        self.observer = Observer()
 
-        self.__folder = folder
-        self.__changes = set()
-        self.__dirs = {}
-        self.__dirs[folder] = manager.add_watch(str(folder), mask)
-        for path in folder.recursedir():
-            if path.is_dir():
-                self.__dirs[path] = manager.add_watch(str(path), mask)
+        self._folder = folder
+        self._changes = set()
+        self.observer.schedule(self, str(folder), recursive=True)
 
-        self.__timer = ResettableTimer(timeout, self._timer_expired,
+        self._timer = ResettableTimer(timeout, self._timer_expired,
                                        lock=lock)
 
     def assume_all_changed(self):
-        self.__changes.add(DirectoryWatcher.ALL_CHANGED)
-        self.__timer.start()
+        self._changes.add(DirectoryWatcher.ALL_CHANGED)
+        self._timer.start()
 
     def run(self):
-        self.notifier.loop()
+        self.observer.start()
 
     def _timer_expired(self):
-        changes = self.__changes
-        self.__changes = set()
+        changes = self._changes
+        self._changes = set()
         logging.info("Directory stable, syncing...")
         if DirectoryWatcher.ALL_CHANGED in changes:
-            self.__callback()
+            self._callback()
         else:
-            self.__callback(changes)
+            self._callback(changes)
 
-    def __add(self, path, moved):
-        logging.info("%s %s: %s",
-                     "Directory" if path.is_dir() else "File",
-                     "moved in" if moved else "created",
-                     path)
-        self.__changes.add(path)
-        if path.is_dir():
-            res = manager.add_watch(str(path), mask)
-            assert len(res) == 1
-            wd = next(iter(res.values()))
-            self.__dirs[path] = wd
-        self.__timer.start()
+    def on_moved(self, event):
+        what = 'directory' if event.is_directory else 'file'
+        logging.info("Moved %s: from %s to %s", what, event.src_path,
+                     event.dest_path)
+        self._changes.add(event.src_path)
+        self._changes.add(event.dest_path)
+        self._timer.start()
 
-    def __remove(self, path, moved):
-        logging.info("%s %s: %s",
-                     "Directory" if path.is_dir() else "File",
-                     "moved out" if moved else "removed",
-                     path)
-        self.__changes.add(path)
-        if moved and path in self.__dirs:
-            wd = self.__dirs.pop(path)
-            manager.rm_watch(wd)
-        self.__timer.start()
+    def on_created(self, event):
+        what = 'directory' if event.is_directory else 'file'
+        logging.info("Created %s: %s", what, event.src_path)
+        self._changes.add(event.src_path)
+        self._timer.start()
 
-    def __changed(self, path):
-        logging.info("File changed: %s", path)
-        self.__changes.add(path)
-        self.__timer.start()
+    def on_deleted(self, event):
+        what = 'directory' if event.is_directory else 'file'
+        logging.info("Deleted %s: %s", what, event.src_path)
+        self._changes.add(event.src_path)
+        self._timer.start()
 
-    def process_IN_CREATE(self, event):
-        path = Path(event.pathname)
-        self.__add(path, moved=False)
-
-    def process_IN_MOVED_TO(self, event):
-        path = Path(event.pathname)
-        self.__add(path, moved=True)
-
-    def process_IN_DELETE(self, event):
-        path = Path(event.pathname)
-        self.__remove(path, moved=False)
-
-    def process_IN_MOVED_FROM(self, event):
-        path = Path(event.pathname)
-        self.__remove(path, moved=True)
-
-    def process_IN_CLOSE_WRITE(self, event):
-        path = Path(event.pathname)
-        self.__changed(path)
+    def on_modified(self, event):
+        what = 'directory' if event.is_directory else 'file'
+        logging.info("Modified %s: %s", what, event.src_path)
+        self._changes.add(event.src_path)
+        self._timer.start()
